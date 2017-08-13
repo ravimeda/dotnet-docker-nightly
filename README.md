@@ -227,7 +227,7 @@ See the following related repos for other application types:
 
 ## License
 
-View [license information](LICENSE) for the software contained in this image.
+View [license information](https://github.com/dotnet/dotnet-docker-nightly/blob/master/LICENSE) for the software contained in this image.
 
 The .NET Core Windows container images use the same license as the [Windows Server 2016 Nano Server base image](https://hub.docker.com/r/microsoft/nanoserver/), as follows:
 
