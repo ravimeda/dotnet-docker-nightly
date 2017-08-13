@@ -227,9 +227,7 @@ See the following related repos for other application types:
 
 ## License
 
-View [license information](https://www.microsoft.com/net/dotnet_library_license.htm) for the software contained in this image.
-
-.NET Core source code is separately licensed as [MIT LICENSE](https://github.com/dotnet/core/blob/master/LICENSE).
+View [license information](LICENSE) for the software contained in this image.
 
 The .NET Core Windows container images use the same license as the [Windows Server 2016 Nano Server base image](https://hub.docker.com/r/microsoft/nanoserver/), as follows:
 
@@ -249,7 +247,7 @@ Please see [the Docker installation documentation](https://docs.docker.com/insta
 
 ### Issues
 
-If you have any problems with or questions about this image, please contact us through a [GitHub issue](https://github.com/dotnet/dotnet-docker/issues).
+If you have any problems with or questions about this image, please contact us through a [GitHub issue](https://github.com/dotnet/dotnet-docker-nightly/issues).
 
 ### Contributing
 
@@ -259,6 +257,6 @@ Before you start to code, please read the [.NET Core contribution guidelines](ht
 
 ### Documentation
 
-You can read documentation for .NET Core, including Docker usage in the [.NET Core docs](https://docs.microsoft.com/en-us/dotnet/articles/core/). The docs are [open source on GitHub](https://github.com/dotnet/core-docs). Contributions are welcome!
+You can read documentation for .NET Core, including Docker usage in the [.NET Core docs](https://docs.microsoft.com/dotnet/core/). The docs are [open source on GitHub](https://github.com/dotnet/core-docs). Contributions are welcome!
 
 [win-containers]: http://aka.ms/windowscontainers
