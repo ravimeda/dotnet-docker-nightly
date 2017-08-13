@@ -68,7 +68,7 @@ For production scenarios, you will want to deploy and run a pre-built applicatio
 You need to create a `Dockerfile` with the following:
 
 ```dockerfile
-FROM microsoft/dotnet:runtime
+FROM microsoft/dotnet-nightly:runtime
 WORKDIR /dotnetapp
 COPY out .
 ENTRYPOINT ["dotnet", "dotnetapp.dll"]
@@ -97,7 +97,7 @@ You can use the .NET Core SDK Docker image as a build and runtime environment. I
 Create a Dockerfile with following lines, which will both build and run your application in the container. This Dockerfile has been optimized (note the two `COPY` commands) to take advantage of Docker layering, resulting in faster image building for iterative development.
 
 ```dockerfile
-FROM microsoft/dotnet
+FROM microsoft/dotnet-nightly
 
 WORKDIR /dotnetapp
 
@@ -125,7 +125,7 @@ The `Dockerfile` and the Docker commands assumes that your application is called
 You can interactively try out .NET Core by taking advantage of the convenience of a container. Try the following set of commands to create and run a .NET Core application in a minute (depending on your internet speed).
 
 ```console
-docker run -it --rm microsoft/dotnet
+docker run -it --rm microsoft/dotnet-nightly
 [now in the container]
 mkdir app
 cd app
@@ -158,7 +158,7 @@ dotnet run
  You can interactively try out ASP.NET Core by taking advantage of the convenience of a container. Try the following set of commands to create and run an ASP.NET Core application in a minute (depending on your internet speed).
 
  ```console
-docker run -p 8000:80 -e "ASPNETCORE_URLS=http://+:80" -it --rm microsoft/dotnet
+docker run -p 8000:80 -e "ASPNETCORE_URLS=http://+:80" -it --rm microsoft/dotnet-nightly
 [now in the container]
 mkdir app
 cd app
@@ -173,7 +173,7 @@ After running `dotnet run` in the container, browse to `http://localhost:8000` i
 The experience is very similar using [Windows Containers][win-containers]. The commands should be the same, with the exception of the `docker run`. Replace the `docker run` command above with the following two commands:
 
  ```console
-docker run -e "ASPNETCORE_URLS=http://+:80" -it --rm microsoft/dotnet
+docker run -e "ASPNETCORE_URLS=http://+:80" -it --rm microsoft/dotnet-nightly
 ipconfig
  ```
 Copy the IP address from the output of `ipconfig`. After running `dotnet run` in the container, browse to that IP address in your browser on your host machine.
@@ -184,11 +184,11 @@ Please use the images at [microsoft/aspnetcore](https://hub.docker.com/r/microso
 
 ## Image variants
 
-The `microsoft/dotnet` images come in different flavors, each designed for a specific use case.
+The `microsoft/dotnet-nightly` images come in different flavors, each designed for a specific use case.
 
 See [Building Docker Images for .NET Core Applications](https://docs.microsoft.com/dotnet/core/docker/building-net-docker-images) to learn more about the various Docker images and when to use each for them.
 
-### `microsoft/dotnet:<version>-sdk`
+### `microsoft/dotnet-nightly:<version>-sdk`
 
 This is the defacto image. If you are unsure about what your needs are, you probably want to use this one. It is designed to be used both as a throw away container (mount your source code and start the container to start your app), as well as the base to build other images off of.
 
@@ -199,11 +199,11 @@ It contains the .NET Core SDK which is comprised of two parts:
 
 Use this image for your development process (developing, building and testing applications).
 
-### `microsoft/dotnet:<version>-runtime`
+### `microsoft/dotnet-nightly:<version>-runtime`
 
 This image contains the .NET Core (runtime and libraries) and is optimized for running .NET Core apps in production.
 
-### `microsoft/dotnet:<version>-runtime-deps`
+### `microsoft/dotnet-nightly:<version>-runtime-deps`
 
 This image contains the operating system with all of the native dependencies needed by .NET Core. This is for  [self-contained](https://docs.microsoft.com/dotnet/articles/core/deploying/index) applications.
 
@@ -220,10 +220,10 @@ You can learn more about using .NET Core with Docker with [.NET Docker samples](
 
 See the following related repos for other application types:
 
+- [microsoft/dotnet](https://hub.docker.com/r/microsoft/dotnet/) for the released .NET Core images.
 - [microsoft/aspnetcore](https://hub.docker.com/r/microsoft/aspnetcore/) for ASP.NET Core images.
 - [microsoft/aspnet](https://hub.docker.com/r/microsoft/aspnet/) for ASP.NET Web Forms and MVC images.
 - [microsoft/dotnet-framework](https://hub.docker.com/r/microsoft/dotnet-framework/) for .NET Framework images (for web applications, see microsoft/aspnet).
-- [microsoft/dotnet-nightly](https://hub.docker.com/r/microsoft/dotnet-nightly/) for pre-release .NET Core images (used to experiment with the latest builds).
 
 ## License
 
