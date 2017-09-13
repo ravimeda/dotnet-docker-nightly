@@ -8,6 +8,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$(docker version) | % { Write-Host "$_" }
+
 if ($UseImageCache) {
     $optionalDockerBuildArgs = ""
 }
