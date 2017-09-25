@@ -46,8 +46,8 @@ namespace Microsoft.DotNet.Docker.Tests
 
         [Fact]
         [Trait("Version", "2.0")]
-        [Trait("Architecture", "arm32")]
-        public void VerifyImages_2_0_arm32()
+        [Trait("Architecture", "ARM")]
+        public void VerifyImages_2_0_Arm()
         {
             VerifyArmImages(dotNetCoreVersion: "2.0", runtimeDepsVersion: "2.0");
         }
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Docker.Tests
             }
         }
 
-        private void VerifyArmImages(string dotNetCoreVersion, string runtimeDepsVersion)
+        private void VerifyArmImages(string dotNetCoreVersion, string runtimeDepsVersion, string architecture = "ARM")
         {
             string appSdkImage = GetIdentifier(dotNetCoreVersion, "app-sdk");
 
@@ -80,11 +80,11 @@ namespace Microsoft.DotNet.Docker.Tests
             try
             {
                 PrepareImage(appSdkImage: appSdkImage, dotNetCoreVersion: dotNetCoreVersion);
-                VerifyRuntimeImage_FrameworkDependentApp(runtimeImageVersion: runtimeDepsVersion, osVariant: "", appSdkImage: appSdkImage, architecture: "arm32");
+                VerifyRuntimeImage_FrameworkDependentApp(runtimeImageVersion: runtimeDepsVersion, osVariant: "", appSdkImage: appSdkImage, architecture: architecture);
 
                 if (DockerHelper.IsLinuxContainerModeEnabled)
                 {
-                    VerifyRuntimeDepsImage_SelfContainedApp(dotNetCoreVersion: dotNetCoreVersion, runtimeDepsImageVersion: runtimeDepsVersion, osVariant: "", appSdkImage: appSdkImage, architecture: "arm32");
+                    VerifyRuntimeDepsImage_SelfContainedApp(dotNetCoreVersion: dotNetCoreVersion, runtimeDepsImageVersion: runtimeDepsVersion, osVariant: "", appSdkImage: appSdkImage, architecture: architecture);
                 }
             }
             finally
@@ -207,6 +207,11 @@ namespace Microsoft.DotNet.Docker.Tests
             string selfContainedAppId = GetIdentifier(dotNetCoreVersion, "self-contained-app");
             string rid = "debian.8-x64";
 
+            if (String.Equals("ARM", architecture, StringComparison.OrdinalIgnoreCase))
+            {
+                rid = "linux-arm";
+            }
+
             try
             {
                 // Build a self-contained app
@@ -273,19 +278,9 @@ namespace Microsoft.DotNet.Docker.Tests
                 imageName += $"-{osVariant}";
             }
 
-            if (String.Equals("arm32", architecture, StringComparison.OrdinalIgnoreCase))
+            if (String.Equals("ARM", architecture, StringComparison.OrdinalIgnoreCase))
             {
                 imageName = $"microsoft/dotnet-nightly:{imageVersion}-runtime-stretch-arm32v7";
-
-                //if (imageType == DotNetImageType.Runtime)
-                //{
-                //    imageName += "-stretch-arm32v7";
-                //}
-
-                //if (imageType == DotNetImageType.Runtime_Deps)
-                //{
-                //    imageName = "arm32v7/debian:stretch";
-                //}
             }
 
             return imageName;
