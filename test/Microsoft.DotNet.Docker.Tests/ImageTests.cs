@@ -72,8 +72,9 @@ namespace Microsoft.DotNet.Docker.Tests
             }
         }
 
-        private void VerifyArmImages(string dotNetCoreVersion, string runtimeDepsVersion, string architecture = "ARM")
+        private void VerifyArmImages(string dotNetCoreVersion, string runtimeDepsVersion)
         {
+            string architecture = "ARM";
             string appSdkImage = GetIdentifier(dotNetCoreVersion, "app-sdk");
 
             try
