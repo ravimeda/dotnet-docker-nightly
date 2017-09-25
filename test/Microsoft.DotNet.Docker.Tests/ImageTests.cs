@@ -76,7 +76,6 @@ namespace Microsoft.DotNet.Docker.Tests
         {
             string appSdkImage = GetIdentifier(dotNetCoreVersion, "app-sdk");
 
-
             try
             {
                 PrepareImage(appSdkImage: appSdkImage, dotNetCoreVersion: dotNetCoreVersion);
