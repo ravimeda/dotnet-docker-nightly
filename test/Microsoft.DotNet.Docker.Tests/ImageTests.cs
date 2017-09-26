@@ -37,7 +37,9 @@ namespace Microsoft.DotNet.Docker.Tests
                 testData.AddRange(new List<ImageDescriptor>
                     {
                         new ImageDescriptor {DotNetCoreVersion = "2.0", OsVariant = "jessie"},
+                        new ImageDescriptor {DotNetCoreVersion = "2.0", Architecture="arm", OsVariant="stretch"},
                         new ImageDescriptor {DotNetCoreVersion = "2.1", RuntimeDepsVersion = "2.0", OsVariant = "jessie"},
+                        new ImageDescriptor {DotNetCoreVersion = "2.1", RuntimeDepsVersion = "2.0", Architecture="arm", OsVariant="stretch"},
                     });
             }
 
@@ -58,7 +60,13 @@ namespace Microsoft.DotNet.Docker.Tests
 
             try
             {
-                VerifySdkImage_NewRestoreRun(imageDescriptor, appSdkImage);
+                BuildTestApp(imageDescriptor, appSdkImage);
+
+                if (!String.Equals("arm", imageDescriptor.Architecture, StringComparison.OrdinalIgnoreCase))
+                {
+                    VerifySdkImage_NewRestoreRun(imageDescriptor, appSdkImage);
+                }
+
                 VerifyRuntimeImage_FrameworkDependentApp(imageDescriptor, appSdkImage);
 
                 if (DockerHelper.IsLinuxContainerModeEnabled)
@@ -72,26 +80,39 @@ namespace Microsoft.DotNet.Docker.Tests
             }
         }
 
-        private void VerifySdkImage_NewRestoreRun(ImageDescriptor imageDescriptor, string appSdkImage)
+        private void BuildTestApp(ImageDescriptor imageDescriptor, string appSdkImage)
         {
             // dotnet new, restore, build a new app using the sdk image
-            List<string> args = new List<string>();
-            args.Add($"netcoreapp_version={imageDescriptor.DotNetCoreVersion}");
-            if (!imageDescriptor.SdkVersion.StartsWith("1."))
+            string dockerFile = $"Dockerfile.{DockerHelper.DockerOS.ToLower()}.testapp";
+
+            if (String.Equals("arm", imageDescriptor.Architecture, StringComparison.OrdinalIgnoreCase))
+            {
+                dockerFile = "Dockerfile.linux.testapp";
+            }
+
+            string sdkImage = GetDotNetImage(imageVersion: imageDescriptor.DotNetCoreVersion, imageType: DotNetImageType.SDK, osVariant: imageDescriptor.OsVariant, architecture: "amd64");
+
+            List<string> args = new List<string>
+            {
+                $"netcoreapp_version={imageDescriptor.DotNetCoreVersion}"
+            };
+
+            if (!imageDescriptor.DotNetCoreVersion.StartsWith("1."))
             {
                 args.Add($"optional_new_args=--no-restore");
             }
 
             string buildArgs = GetBuildArgs(args.ToArray());
-            string sdkImage = GetDotNetImage(
-                imageDescriptor.SdkVersion, DotNetImageType.SDK, imageDescriptor.OsVariant);
 
             DockerHelper.Build(
-                dockerfile: $"Dockerfile.{DockerHelper.DockerOS.ToLower()}.testapp",
+                dockerfile: dockerFile,
                 fromImage: sdkImage,
                 tag: appSdkImage,
                 buildArgs: buildArgs);
+        }
 
+        private void VerifySdkImage_NewRestoreRun(ImageDescriptor imageDescriptor, string appSdkImage)
+        {
             // dotnet run the new app using the sdk image
             DockerHelper.Run(
                 image: appSdkImage,
@@ -114,7 +135,7 @@ namespace Microsoft.DotNet.Docker.Tests
 
                 // Run the app in the Docker volume to verify the runtime image
                 string runtimeImage = GetDotNetImage(
-                    imageDescriptor.DotNetCoreVersion, DotNetImageType.Runtime, imageDescriptor.OsVariant);
+                    imageDescriptor.DotNetCoreVersion, DotNetImageType.Runtime, imageDescriptor.OsVariant, imageDescriptor.Architecture);
                 string appDllPath = DockerHelper.GetContainerWorkPath("testApp.dll");
                 DockerHelper.Run(
                     image: runtimeImage,
@@ -132,6 +153,11 @@ namespace Microsoft.DotNet.Docker.Tests
         {
             string selfContainedAppId = GetIdentifier(imageDescriptor.DotNetCoreVersion, "self-contained-app");
             string rid = "debian.8-x64";
+
+            if (String.Equals("arm", imageDescriptor.Architecture, StringComparison.OrdinalIgnoreCase))
+            {
+                rid = "linux-arm";
+            }
 
             try
             {
@@ -156,7 +182,7 @@ namespace Microsoft.DotNet.Docker.Tests
 
                     // Run the self-contained app in the Docker volume to verify the runtime-deps image
                     string runtimeDepsImage = GetDotNetImage(
-                        imageDescriptor.RuntimeDepsVersion, DotNetImageType.Runtime_Deps, imageDescriptor.OsVariant);
+                        imageDescriptor.RuntimeDepsVersion, DotNetImageType.Runtime_Deps, imageDescriptor.OsVariant, imageDescriptor.Architecture);
                     string appExePath = DockerHelper.GetContainerWorkPath("testApp");
                     DockerHelper.Run(
                         image: runtimeDepsImage,
@@ -190,13 +216,20 @@ namespace Microsoft.DotNet.Docker.Tests
             return buildArgs;
         }
 
-        public static string GetDotNetImage(string imageVersion, DotNetImageType imageType, string osVariant)
+        public static string GetDotNetImage(string imageVersion, DotNetImageType imageType, string osVariant, string architecture)
         {
             string variantName = Enum.GetName(typeof(DotNetImageType), imageType).ToLowerInvariant().Replace('_', '-');
+            bool isArmRuntime = String.Equals("arm", architecture, StringComparison.OrdinalIgnoreCase) && !String.Equals("sdk", variantName, StringComparison.OrdinalIgnoreCase);
             string imageName = $"microsoft/dotnet-nightly:{imageVersion}-{variantName}";
-            if (!string.IsNullOrEmpty(osVariant))
+
+            if (!string.IsNullOrEmpty(osVariant) && isArmRuntime)
             {
                 imageName += $"-{osVariant}";
+            }
+
+            if (isArmRuntime)
+            {
+                imageName += $"-arm32v7";
             }
 
             return imageName;
