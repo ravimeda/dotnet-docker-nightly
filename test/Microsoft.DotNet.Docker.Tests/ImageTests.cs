@@ -101,22 +101,21 @@ namespace Microsoft.DotNet.Docker.Tests
         private void CreateTestAppWithSdkImage(ImageDescriptor imageDescriptor, string appSdkImage)
         {
             // dotnet new, restore, build a new app using the sdk image
-            List<string> args = new List<string>();
-            args.Add($"netcoreapp_version={imageDescriptor.DotNetCoreVersion}");
+            List<string> buildArgs = new List<string>();
+            buildArgs.Add($"netcoreapp_version={imageDescriptor.DotNetCoreVersion}");
             if (!imageDescriptor.SdkVersion.StartsWith("1."))
             {
-                args.Add($"optional_new_args=--no-restore");
+                buildArgs.Add($"optional_new_args=--no-restore");
             }
 
-            string buildArgs = GetBuildArgs(args.ToArray());
             string sdkImage = GetDotNetImage(
                 imageDescriptor.DotNetCoreVersion, DotNetImageType.SDK, imageDescriptor.SdkOsVariant);
 
             DockerHelper.Build(
                 dockerfile: $"Dockerfile.{DockerHelper.DockerOS.ToLower()}.testapp",
-                fromImage: sdkImage,
                 tag: appSdkImage,
-                buildArgs: buildArgs);
+                fromImage: sdkImage,
+                buildArgs: buildArgs.ToArray());
         }
 
         private void VerifySdkImage_RunApp(ImageDescriptor imageDescriptor, string appSdkImage)
@@ -168,12 +167,11 @@ namespace Microsoft.DotNet.Docker.Tests
             try
             {
                 // Build a self-contained app
-                string buildArgs = GetBuildArgs($"rid={rid}");
                 DockerHelper.Build(
                     dockerfile: "Dockerfile.linux.testapp.selfcontained",
-                    fromImage: appSdkImage,
                     tag: selfContainedAppId,
-                    buildArgs: buildArgs);
+                    fromImage: appSdkImage,
+                    buildArgs: $"rid={rid}");
 
                 try
                 {
@@ -208,21 +206,6 @@ namespace Microsoft.DotNet.Docker.Tests
             {
                 DockerHelper.DeleteImage(selfContainedAppId);
             }
-        }
-
-        private static string GetBuildArgs(params string[] args)
-        {
-            string buildArgs = string.Empty;
-
-            if (args != null && args.Any())
-            {
-                foreach (string arg in args)
-                {
-                    buildArgs += $" --build-arg {arg}";
-                }
-            }
-
-            return buildArgs;
         }
 
         public static string GetDotNetImage(
