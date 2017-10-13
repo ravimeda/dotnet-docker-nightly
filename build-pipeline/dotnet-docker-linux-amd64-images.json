@@ -132,7 +132,8 @@
       "value": "$(Build.DefinitionName)-$(Build.BuildId)"
     },
     "PB.docker.password": {
-      "value": ""
+      "value": null,
+      "isSecret": true
     },
     "PB.image-builder.customCommonArgs": {
       "value": ""
