@@ -3,12 +3,18 @@ import jobs.generation.Utilities
 def project = GithubProject
 def branch = GithubBranchName
 def isPR = true
-def platformList = ['Ubuntu16.04:Debian', 'Windows_2016:NanoServer']
+def platformList = ['Ubuntu16.04:Debian', 'Windows_2016:NanoServer', 'Windows_2016:1709']
 
 platformList.each { platform ->
     def(hostOS, containerOS) = platform.tokenize(':')
     def machineLabel = (hostOS == 'Windows_2016') ? 'latest-docker' : 'latest-or-auto-docker'
-    def versionList = (hostOS == 'Windows_2016') ? ['1.', '2.0', '2.1'] : ['1.', '2.']
+
+    if ((hostOS == 'Windows_2016')) {
+        def versionList = (containerOS == '1709') ? ['2.0', '2.1'] : ['1.', '2.0', '2.1']
+    }
+    else {
+        def versionList = ['1.', '2.']
+    }
 
     versionList.each { version ->
         def newJobName = Utilities.getFullJobName(project, "${containerOS}_${version}", isPR)
@@ -25,7 +31,13 @@ platformList.each { platform ->
             }
         }
 
-        Utilities.setMachineAffinity(newJob, hostOS, machineLabel)
+        if (containerOS == '1709') {
+            newJob.with {label('windows.10.amd64.serverrs3.open')}
+        }
+        else {
+            Utilities.setMachineAffinity(newJob, hostOS, machineLabel)
+        }
+
         Utilities.standardJobSetup(newJob, project, isPR, "*/${branch}")
         Utilities.addGithubPRTriggerForBranch(newJob, branch, "${containerOS} - ${version} Dockerfiles")
     }
