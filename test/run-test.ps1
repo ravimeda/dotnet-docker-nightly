@@ -5,7 +5,7 @@
 
 [cmdletbinding()]
 param(
-    [string]$Filter,
+    [string]$VersionFilter,
     [string]$Architecture,
     [string]$OS
 )
@@ -53,7 +53,7 @@ Try {
 
     $env:IMAGE_ARCH_FILTER = $Architecture
     $env:IMAGE_OS_FILTER = $OS
-    $env:IMAGE_VERSION_FILTER = $Filter
+    $env:IMAGE_VERSION_FILTER = $VersionFilter
 
     & $DotnetInstallDir/dotnet test -v n
 

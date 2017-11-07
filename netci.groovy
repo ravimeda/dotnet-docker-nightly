@@ -8,9 +8,12 @@ def platformList = ['Ubuntu16.04:Debian', 'Windows_2016:NanoServer', 'Windows_20
 platformList.each { platform ->
     def(hostOS, containerOS) = platform.tokenize(':')
     def machineLabel = (hostOS == 'Windows_2016') ? 'latest-docker' : 'latest-or-auto-docker'
-    def versionList = (hostOS == 'Windows_2016') ? ['1.', '2.0', '2.1'] : ['1.', '2.']
+
     if (containerOS == 'NanoServer-1709') {
         versionList = ['2.0', '2.1']
+    }
+    else {
+        versionList = (hostOS == 'Windows_2016') ? ['1.', '2.0', '2.1'] : ['1.', '2.']
     }
 
     versionList.each { version ->
@@ -20,17 +23,10 @@ platformList.each { platform ->
         def newJob = job(newJobName) {
             steps {
                 if (hostOS == 'Windows_2016') {
-                    if (versionFilter.contains("2.")) {
-                        versionFilter.concat("/nanoserver")
-                        if (containerOS == 'NanoServer-1709') {
-                            versionFilter.concat("-1709");
-                        }
-                        versionFilter.concat("/*")
-                    }
-                    batchFile("powershell -NoProfile -Command .\\build-and-test.ps1 -Filter \"${versionFilter}\"")
+                    batchFile("powershell -NoProfile -Command .\\build-and-test.ps1 -VersionFilter \"${versionFilter}\" -OS \"${containerOS}\"")
                 }
                 else {
-                    shell("docker build --rm -t testrunner -f ./test/Dockerfile.linux.testrunner . && docker run -v /var/run/docker.sock:/var/run/docker.sock testrunner powershell -File build-and-test.ps1 -Filter \"${versionFilter}\"")
+                    shell("docker build --rm -t testrunner -f ./test/Dockerfile.linux.testrunner . && docker run -v /var/run/docker.sock:/var/run/docker.sock testrunner powershell -File build-and-test.ps1 -VersionFilter \"${versionFilter}\"")
                 }
             }
         }
