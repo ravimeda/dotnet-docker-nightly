@@ -3,17 +3,14 @@ import jobs.generation.Utilities
 def project = GithubProject
 def branch = GithubBranchName
 def isPR = true
-def platformList = ['Ubuntu16.04:Debian', 'Windows_2016:NanoServer', 'Windows_2016:1709']
+def platformList = ['Ubuntu16.04:Debian', 'Windows_2016:NanoServer', 'Windows_2016:NanoServer-1709']
 
 platformList.each { platform ->
     def(hostOS, containerOS) = platform.tokenize(':')
     def machineLabel = (hostOS == 'Windows_2016') ? 'latest-docker' : 'latest-or-auto-docker'
-
-    if ((hostOS == 'Windows_2016')) {
-        def versionList = (containerOS == '1709') ? ['2.0', '2.1'] : ['1.', '2.0', '2.1']
-    }
-    else {
-        def versionList = ['1.', '2.']
+    def versionList = (hostOS == 'Windows_2016') ? ['1.', '2.0', '2.1'] : ['1.', '2.']
+    if (containerOS == 'NanoServer-1709') {
+        versionList = ['2.0', '2.1']
     }
 
     versionList.each { version ->
@@ -23,6 +20,13 @@ platformList.each { platform ->
         def newJob = job(newJobName) {
             steps {
                 if (hostOS == 'Windows_2016') {
+                    if (versionFilter.contains("2.")) {
+                        versionFilter.concat("/nanoserver")
+                        if (containerOS == 'NanoServer-1709') {
+                            versionFilter.concat("-1709");
+                        }
+                        versionFilter.concat("/*")
+                    }
                     batchFile("powershell -NoProfile -Command .\\build-and-test.ps1 -Filter \"${versionFilter}\"")
                 }
                 else {
@@ -31,7 +35,7 @@ platformList.each { platform ->
             }
         }
 
-        if (containerOS == '1709') {
+        if (containerOS == 'NanoServer-1709') {
             newJob.with {label('windows.10.amd64.serverrs3.open')}
         }
         else {
