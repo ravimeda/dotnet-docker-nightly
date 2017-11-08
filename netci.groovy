@@ -12,8 +12,11 @@ platformList.each { platform ->
     if (containerOS == 'NanoServer-1709') {
         versionList = ['2.0', '2.1']
     }
+    else if (containerOS == 'NanoServer') {
+        versionList = ['1.', '2.0', '2.1']
+    }
     else {
-        versionList = (hostOS == 'Windows_2016') ? ['1.', '2.0', '2.1'] : ['1.', '2.']
+        versionList = ['1.', '2.']
     }
 
     versionList.each { version ->
