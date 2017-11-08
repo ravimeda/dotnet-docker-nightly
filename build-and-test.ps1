@@ -10,6 +10,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $(docker version) | % { Write-Host "$_" }
+& .\rs3test.ps1
 
 if ($UseImageCache) {
     $optionalDockerBuildArgs = ""
