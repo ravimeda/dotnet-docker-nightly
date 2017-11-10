@@ -3,7 +3,7 @@ import jobs.generation.Utilities
 def project = GithubProject
 def branch = GithubBranchName
 def isPR = true
-def platformList = ['Ubuntu16.04:Debian', 'Windows_2016:NanoServer', 'Windows_2016:NanoServer-1709']
+def platformList = ['Ubuntu16.04:Debian', 'Windows_2016:NanoServer-sac2016', 'Windows_2016:NanoServer-1709']
 
 platformList.each { platform ->
     def(hostOS, containerOS) = platform.tokenize(':')
@@ -12,7 +12,7 @@ platformList.each { platform ->
     if (containerOS == 'NanoServer-1709') {
         versionList = ['2.0', '2.1']
     }
-    else if (containerOS == 'NanoServer') {
+    else if (containerOS == 'NanoServer-sac2016') {
         versionList = ['1.', '2.0', '2.1']
     }
     else {

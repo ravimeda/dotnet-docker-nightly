@@ -57,15 +57,15 @@
         {
           "Name": "dotnet-docker-windows-amd64-images",
           "Parameters": {
-            "PB.image-builder.path": "2.0*/nanoserver/*",
-            "PB.image-builder.customCommonArgs": "--test-var VersionFilter=2.0* --test-var OS=nanoserver"
+            "PB.image-builder.path": "2.0*/nanoserver-sac2016/*",
+            "PB.image-builder.customCommonArgs": "--test-var VersionFilter=2.0* --test-var OS=nanoserver-sac2016"
           }
         },
         {
           "Name": "dotnet-docker-windows-amd64-images",
           "Parameters": {
-            "PB.image-builder.path": "2.1*/nanoserver/*",
-            "PB.image-builder.customCommonArgs": "--test-var VersionFilter=2.1* --test-var OS=nanoserver"
+            "PB.image-builder.path": "2.1*/nanoserver-sac2016/*",
+            "PB.image-builder.customCommonArgs": "--test-var VersionFilter=2.1* --test-var OS=nanoserver-sac2016"
           }
         }
       ]
