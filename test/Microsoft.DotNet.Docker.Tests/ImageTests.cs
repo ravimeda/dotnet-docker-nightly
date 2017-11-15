@@ -71,11 +71,6 @@ namespace Microsoft.DotNet.Docker.Tests
                     new ImageDescriptor { DotNetCoreVersion = "2.1", PlatformOS = "nanoserver-sac2016" },
                     new ImageDescriptor { DotNetCoreVersion = "2.1", PlatformOS = "nanoserver-1709" },
                 };
-
-                if (OsFilter == null)
-                {
-                    OsFilter = "nanoserver*";
-                }
             }
 
             string versionFilterPattern = null;
