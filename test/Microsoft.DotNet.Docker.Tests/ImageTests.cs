@@ -44,12 +44,8 @@ namespace Microsoft.DotNet.Docker.Tests
                         Architecture = "arm"
                     },
                     new ImageDescriptor { DotNetCoreVersion = "2.1", RuntimeDepsVersion = "2.0" },
-                    new ImageDescriptor
-                    {
-                        DotNetCoreVersion = "2.1",
-                        RuntimeDepsVersion = "2.0",
-                        OsVariant = "jessie"
-                    },
+                    new ImageDescriptor { DotNetCoreVersion = "2.1", RuntimeDepsVersion = "2.0", OsVariant = "jessie" },
+                    new ImageDescriptor { DotNetCoreVersion = "2.1", OsVariant = "alpine", SdkOsVariant = "", },
                     new ImageDescriptor
                     {
                         DotNetCoreVersion = "2.1",
@@ -112,7 +108,7 @@ namespace Microsoft.DotNet.Docker.Tests
             {
                 CreateTestAppWithSdkImage(imageDescriptor, appSdkImage);
 
-                if (!imageDescriptor.IsArm)
+                if (!string.IsNullOrEmpty(imageDescriptor.SdkOsVariant))
                 {
                     VerifySdkImage_RunApp(imageDescriptor, appSdkImage);
                 }
@@ -272,6 +268,10 @@ namespace Microsoft.DotNet.Docker.Tests
             if (imageDescriptor.IsArm)
             {
                 rid = "linux-arm";
+            }
+            else if (imageDescriptor.IsAlpine)
+            {
+                rid = "alpine.3.6-x64";
             }
             else if (imageDescriptor.DotNetCoreVersion.StartsWith("1."))
             {
