@@ -44,12 +44,8 @@ namespace Microsoft.DotNet.Docker.Tests
                         Architecture = "arm"
                     },
                     new ImageDescriptor { DotNetCoreVersion = "2.1", RuntimeDepsVersion = "2.0" },
-                    new ImageDescriptor
-                    {
-                        DotNetCoreVersion = "2.1",
-                        RuntimeDepsVersion = "2.0",
-                        OsVariant = "jessie"
-                    },
+                    new ImageDescriptor { DotNetCoreVersion = "2.1", RuntimeDepsVersion = "2.0", OsVariant = "jessie" },
+                    new ImageDescriptor { DotNetCoreVersion = "2.1", OsVariant = "alpine", SdkOsVariant = "", },
                     new ImageDescriptor
                     {
                         DotNetCoreVersion = "2.1",
@@ -65,7 +61,7 @@ namespace Microsoft.DotNet.Docker.Tests
                 testData = new List<ImageDescriptor>
                 {
                     new ImageDescriptor { DotNetCoreVersion = "1.0", PlatformOS = "nanoserver-sac2016", SdkVersion = "1.1" },
-                    new ImageDescriptor { DotNetCoreVersion = "1.1", PlatformOS = "nanoserver-sac2016", RuntimeDepsVersion = "1.0" },
+                    new ImageDescriptor { DotNetCoreVersion = "1.1", PlatformOS = "nanoserver-sac2016" },
                     new ImageDescriptor { DotNetCoreVersion = "2.0", PlatformOS = "nanoserver-sac2016" },
                     new ImageDescriptor { DotNetCoreVersion = "2.0", PlatformOS = "nanoserver-1709" },
                     new ImageDescriptor { DotNetCoreVersion = "2.1", PlatformOS = "nanoserver-sac2016" },
@@ -112,7 +108,7 @@ namespace Microsoft.DotNet.Docker.Tests
             {
                 CreateTestAppWithSdkImage(imageDescriptor, appSdkImage);
 
-                if (!imageDescriptor.IsArm)
+                if (!string.IsNullOrEmpty(imageDescriptor.SdkOsVariant))
                 {
                     VerifySdkImage_RunApp(imageDescriptor, appSdkImage);
                 }
@@ -162,15 +158,19 @@ namespace Microsoft.DotNet.Docker.Tests
         private void VerifyRuntimeImage_FrameworkDependentApp(ImageDescriptor imageDescriptor, string appSdkImage)
         {
             string frameworkDepAppId = GetIdentifier(imageDescriptor.DotNetCoreVersion, "framework-dependent-app");
+            bool isRunAsContainerAdministrator = String.Equals(
+                "nanoserver-1709", imageDescriptor.PlatformOS, StringComparison.OrdinalIgnoreCase);
+            string optionalPublishArgs = GetOptionalPublishArgs(imageDescriptor);
 
             try
             {
                 // Publish the app to a Docker volume using the app's sdk image
                 DockerHelper.Run(
                     image: appSdkImage,
-                    command: $"dotnet publish -o {DockerHelper.ContainerWorkDir}",
+                    command: $"dotnet publish -o {DockerHelper.ContainerWorkDir} {optionalPublishArgs}",
                     containerName: frameworkDepAppId,
-                    volumeName: frameworkDepAppId);
+                    volumeName: frameworkDepAppId,
+                    runAsContainerAdministrator: isRunAsContainerAdministrator);
 
                 // Run the app in the Docker volume to verify the runtime image
                 string runtimeImage = GetDotNetImage(
@@ -183,7 +183,8 @@ namespace Microsoft.DotNet.Docker.Tests
                     image: runtimeImage,
                     command: $"dotnet {appDllPath}",
                     containerName: frameworkDepAppId,
-                    volumeName: frameworkDepAppId);
+                    volumeName: frameworkDepAppId,
+                    runAsContainerAdministrator: isRunAsContainerAdministrator);
             }
             finally
             {
@@ -194,7 +195,7 @@ namespace Microsoft.DotNet.Docker.Tests
         private void VerifyRuntimeDepsImage_SelfContainedApp(ImageDescriptor imageDescriptor, string appSdkImage)
         {
             string selfContainedAppId = GetIdentifier(imageDescriptor.DotNetCoreVersion, "self-contained-app");
-            string rid = imageDescriptor.IsArm ? "linux-arm" : "debian.8-x64";
+            string rid = GetRuntimeIdentifier(imageDescriptor);
 
             try
             {
@@ -208,7 +209,7 @@ namespace Microsoft.DotNet.Docker.Tests
                 try
                 {
                     // Publish the self-contained app to a Docker volume using the app's sdk image
-                    string optionalPublishArgs = imageDescriptor.DotNetCoreVersion.StartsWith("1.") ? "" : "--no-restore";
+                    string optionalPublishArgs = GetOptionalPublishArgs(imageDescriptor);
                     string dotNetCmd = $"dotnet publish -r {rid} -o {DockerHelper.ContainerWorkDir} {optionalPublishArgs}";
                     DockerHelper.Run(
                         image: selfContainedAppId,
@@ -240,6 +241,11 @@ namespace Microsoft.DotNet.Docker.Tests
             }
         }
 
+        private static string GetOptionalPublishArgs(ImageDescriptor imageDescriptor)
+        {
+            return imageDescriptor.DotNetCoreVersion.StartsWith("1.") ? "" : "--no-restore";
+        }
+
         public static string GetDotNetImage(
             string imageVersion, DotNetImageType imageType, string osVariant, bool isArm = false)
         {
@@ -263,6 +269,30 @@ namespace Microsoft.DotNet.Docker.Tests
         private static string GetIdentifier(string version, string type)
         {
             return $"{version}-{type}-{DateTime.Now.ToFileTime()}";
+        }
+
+        private static string GetRuntimeIdentifier(ImageDescriptor imageDescriptor)
+        {
+            string rid;
+
+            if (imageDescriptor.IsArm)
+            {
+                rid = "linux-arm";
+            }
+            else if (imageDescriptor.IsAlpine)
+            {
+                rid = "alpine.3.6-x64";
+            }
+            else if (imageDescriptor.DotNetCoreVersion.StartsWith("1."))
+            {
+                rid = "debian.8-x64";
+            }
+            else
+            {
+                rid = "linux-x64";
+            }
+
+            return rid;
         }
     }
 }
