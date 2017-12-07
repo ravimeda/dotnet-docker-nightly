@@ -20,6 +20,11 @@ else {
 
 $manifest = Get-Content "manifest.json" | ConvertFrom-Json
 $manifestRepo = $manifest.Repos[0]
+if ((Get-Service -Name docker).Status -ne 'Running')
+{
+    Restart-Service -Name docker -Force -Verbose
+    (Get-Service -Name docker).WaitForStatus('Running', '00:10:00')
+}
 $activeOS = docker version -f "{{ .Server.Os }}"
 $builtTags = @()
 
