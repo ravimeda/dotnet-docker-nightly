@@ -35,7 +35,7 @@ platformList.each { platform ->
         }
 
         if (containerOS == 'NanoServer-1709') {
-            newJob.with {label('windows.10.amd64.serverrs3.open')}
+            newJob.with {label('windows.10.amd64.serverrs3.open.westus')}
         }
         else {
             Utilities.setMachineAffinity(newJob, hostOS, machineLabel)
