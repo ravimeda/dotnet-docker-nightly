@@ -9,7 +9,6 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Restart-Service -Name "Docker" -Force
 $(docker version) | % { Write-Host "$_" }
 
 if ($UseImageCache) {
