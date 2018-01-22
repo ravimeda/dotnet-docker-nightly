@@ -3,13 +3,32 @@ param(
     [switch]$UseImageCache,
     [string]$VersionFilter,
     [string]$ArchitectureFilter,
-    [string]$OSFilter
+    [string]$OSFilter,
+    [switch]$CleanupDocker
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Invoke-CleanupDocker()
+{
+    if ($CleanupDocker)
+    {
+        docker ps -a -q | ForEach-Object { docker rm -f $_ }
+        # Windows base images are large, preserve them to avoid the overhead of pulling each time.
+        docker images |
+            Where-Object { 
+                -Not ($_.StartsWith("microsoft/nanoserver ")`
+                -Or $_.StartsWith("microsoft/windowsservercore ")`
+                -Or $_.StartsWith("REPOSITORY ")) } |
+            ForEach-Object { $_.Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)[2] } |
+            Select-Object -Unique |
+            ForEach-Object { docker rmi -f $_ }
+    }
+}
+
 $(docker version) | % { Write-Host "$_" }
+Invoke-CleanupDocker
 
 if ($UseImageCache) {
     $optionalDockerBuildArgs = ""
@@ -60,5 +79,6 @@ $manifestRepo.Images |
     }
 
 ./test/run-test.ps1 -VersionFilter $VersionFilter -ArchitectureFilter $ArchitectureFilter -OSFilter $OSFilter
+Invoke-CleanupDocker
 
 Write-Host "Tags built and tested:`n$($builtTags | Out-String)"
