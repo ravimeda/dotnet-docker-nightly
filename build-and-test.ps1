@@ -10,25 +10,29 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Invoke-CleanupDocker()
+function Invoke-CleanupDocker($ActiveOS)
 {
-    if ($CleanupDocker)
-    {
-        docker ps -a -q | ForEach-Object { docker rm -f $_ }
-        # Windows base images are large, preserve them to avoid the overhead of pulling each time.
-        docker images |
-            Where-Object { 
+    if ($CleanupDocker) {
+        if ("$ActiveOS" -eq "windows") {
+            # Windows base images are large, preserve them to avoid the overhead of pulling each time.
+            docker images |
+            Where-Object {
                 -Not ($_.StartsWith("microsoft/nanoserver ")`
                 -Or $_.StartsWith("microsoft/windowsservercore ")`
                 -Or $_.StartsWith("REPOSITORY ")) } |
             ForEach-Object { $_.Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)[2] } |
             Select-Object -Unique |
             ForEach-Object { docker rmi -f $_ }
+        }
+        else {
+            docker system prune -a -f
+        }
     }
 }
 
 $(docker version) | % { Write-Host "$_" }
-Invoke-CleanupDocker
+$activeOS = docker version -f "{{ .Server.Os }}"
+Invoke-CleanupDocker $activeOS
 
 if ($UseImageCache) {
     $optionalDockerBuildArgs = ""
@@ -39,7 +43,6 @@ else {
 
 $manifest = Get-Content "manifest.json" | ConvertFrom-Json
 $manifestRepo = $manifest.Repos[0]
-$activeOS = docker version -f "{{ .Server.Os }}"
 $builtTags = @()
 
 $buildFilter = "*"
@@ -52,7 +55,8 @@ if (-not [string]::IsNullOrEmpty($OsFilter))
     $buildFilter = "$buildFilter/$OsFilter/*"
 }
 
-$manifestRepo.Images |
+try {
+    $manifestRepo.Images |
     ForEach-Object {
         $images = $_
         $_.Platforms |
@@ -78,7 +82,9 @@ $manifestRepo.Images |
             }
     }
 
-./test/run-test.ps1 -VersionFilter $VersionFilter -ArchitectureFilter $ArchitectureFilter -OSFilter $OSFilter
-Invoke-CleanupDocker
-
-Write-Host "Tags built and tested:`n$($builtTags | Out-String)"
+    ./test/run-test.ps1 -VersionFilter $VersionFilter -ArchitectureFilter $ArchitectureFilter -OSFilter $OSFilter
+    Write-Host "Tags built and tested:`n$($builtTags | Out-String)"
+}
+finally {
+    Invoke-CleanupDocker $activeOS
+}
