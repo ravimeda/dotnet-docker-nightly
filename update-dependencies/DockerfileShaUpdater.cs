@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.VersionTools;
 using Microsoft.DotNet.VersionTools.Dependencies;
 using System;
 using System.Collections.Generic;
@@ -29,11 +28,11 @@ namespace Dotnet.Docker.Nightly
         }
 
         protected override string TryGetDesiredValue(
-            IEnumerable<DependencyBuildInfo> dependencyBuildInfos,
-            out IEnumerable<BuildInfo> usedBuildInfos)
+            IEnumerable<IDependencyInfo> dependencyBuildInfos,
+            out IEnumerable<IDependencyInfo> usedBuildInfos)
         {
             string sha = null;
-            usedBuildInfos = Enumerable.Empty<BuildInfo>();
+            usedBuildInfos = Enumerable.Empty<IDependencyInfo>();
 
             Trace.TraceInformation($"DockerfileShaUpdater is processing '{Path}'.");
             string dockerfile = File.ReadAllText(Path);
