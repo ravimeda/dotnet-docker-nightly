@@ -13,13 +13,14 @@ $ErrorActionPreference = 'Stop'
 $imageName = "update-dependencies"
 
 try {
-    & docker build -t $imageName -f $PSScriptRoot\Dockerfile --pull $PSScriptRoot
+    $repoRoot = Split-Path -Path "$PSScriptRoot" -Parent
+
+    & docker build -t $imageName -f $PSScriptRoot\Dockerfile --pull $repoRoot
     if ($LastExitCode -ne 0) {
         throw "Failed to build the update dependencies tool"
     }
 
-    $repoRoot = Split-Path -Path "$PSScriptRoot" -Parent
-    Invoke-Expression "docker run --rm -v ${repoRoot}:C:\repo -w /repo --user ContainerAdministrator $imageName $UpdateDependenciesParams"
+    Invoke-Expression "docker run --rm --user ContainerAdministrator $imageName $UpdateDependenciesParams"
     if ($LastExitCode -ne 0) {
         throw "Failed to update dependencies"
     }
